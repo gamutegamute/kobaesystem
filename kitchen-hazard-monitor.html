@@ -1,0 +1,1212 @@
+<title>台所ハザードモニター｜菌・コバエ発生リスク可視化</title>
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --bg:#EEF2EF;
+    --surface:#FFFFFF;
+    --surface-2:#F3F7F4;
+    --surface-3:#E7EFEA;
+    --ink:#16241F;
+    --ink-soft:#4B5D57;
+    --ink-faint:#7E8D87;
+    --line:#D7E0DB;
+    --line-soft:#E4EAE6;
+    --accent:#1F6F64;
+    --accent-strong:#134F47;
+    --accent-soft:#D8ECE6;
+    --good:#2F8F5B;      --good-soft:#E1F1E7;
+    --caution:#B07A15;   --caution-soft:#F5ECD3;
+    --warning:#C1571D;   --warning-soft:#F6E2D3;
+    --danger:#B23A2E;    --danger-soft:#F5DBD7;
+    --shadow: 0 1px 2px rgba(20,35,30,.06), 0 8px 24px -12px rgba(20,35,30,.18);
+    --font-display:"Hiragino Mincho ProN","Yu Mincho","YuMincho",Georgia,serif;
+    --font-body:"Hiragino Sans","Yu Gothic","Noto Sans JP","Segoe UI",sans-serif;
+    --font-mono:"SFMono-Regular",Consolas,Menlo,"Yu Gothic",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E1613; --surface:#131D19; --surface-2:#17231D; --surface-3:#1C2A23;
+      --ink:#E8EFEA; --ink-soft:#A9BBB2; --ink-faint:#748A81;
+      --line:#28372F; --line-soft:#20302A;
+      --accent:#57C9B7; --accent-strong:#8AE0D2; --accent-soft:#1B3B34;
+      --good:#4FAE7B; --good-soft:#173327;
+      --caution:#D9AC4A; --caution-soft:#3A2F14;
+      --warning:#E08A4E; --warning-soft:#3B2415;
+      --danger:#E07567; --danger-soft:#3B1A16;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E1613; --surface:#131D19; --surface-2:#17231D; --surface-3:#1C2A23;
+    --ink:#E8EFEA; --ink-soft:#A9BBB2; --ink-faint:#748A81;
+    --line:#28372F; --line-soft:#20302A;
+    --accent:#57C9B7; --accent-strong:#8AE0D2; --accent-soft:#1B3B34;
+    --good:#4FAE7B; --good-soft:#173327;
+    --caution:#D9AC4A; --caution-soft:#3A2F14;
+    --warning:#E08A4E; --warning-soft:#3B2415;
+    --danger:#E07567; --danger-soft:#3B1A16;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  ::selection{ background:var(--accent-soft); }
+
+  .page{ max-width:1120px; margin:0 auto; padding:2.5rem 1.5rem 4rem; }
+
+  header.hero{ margin-bottom:2rem; }
+  header.hero .eyebrow{
+    font-size:.72rem; letter-spacing:.14em; color:var(--accent-strong);
+    text-transform:uppercase; font-weight:600; margin:0 0 .5rem;
+  }
+  header.hero h1{
+    font-family:var(--font-display); font-weight:600;
+    font-size:clamp(1.6rem,3.2vw,2.35rem); line-height:1.3;
+    margin:0 0 .6rem; text-wrap:balance; color:var(--ink);
+  }
+  header.hero p{
+    margin:0; color:var(--ink-soft); font-size:.95rem; line-height:1.75; max-width:62ch;
+  }
+
+  /* ---------- tabs & banner ---------- */
+  .banner{
+    display:flex; align-items:center; gap:1.1rem; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:1rem 1.25rem; margin-bottom:1.5rem; box-shadow:var(--shadow);
+  }
+  .banner .banner-main{ display:flex; align-items:center; gap:.9rem; }
+  .banner .banner-text .banner-label{ font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin:0 0 .2rem; }
+  .banner .banner-text .banner-metric{ font-family:var(--font-mono); font-size:1.55rem; font-weight:700; line-height:1; }
+  .banner .banner-caption{ font-size:.78rem; color:var(--ink-soft); margin:.25rem 0 0; }
+  .banner .breakdown{ display:flex; gap:.55rem; margin-left:auto; flex-wrap:wrap; }
+  .banner .chip{ display:flex; flex-direction:column; gap:.15rem; background:var(--surface-2); border:1px solid var(--line-soft); border-radius:9px; padding:.4rem .65rem; min-width:100px; }
+  .banner .chip.dominant{ border-color:var(--accent); }
+  .banner .chip .chip-label{ font-size:.65rem; color:var(--ink-faint); }
+  .banner .chip .chip-val{ font-family:var(--font-mono); font-size:.86rem; font-weight:700; }
+
+  .mode-tabs{ display:flex; gap:.4rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+  .mode-tab{
+    background:var(--surface); border:1px solid var(--line); color:var(--ink-soft);
+    font-family:var(--font-body); font-size:.85rem; font-weight:600;
+    padding:.55rem 1.1rem; border-radius:999px; cursor:pointer;
+  }
+  .mode-tab.active{ background:var(--accent); border-color:var(--accent); color:var(--surface); }
+  .mode-tab:hover:not(.active){ border-color:var(--accent); color:var(--accent-strong); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  /* ---------- controls ---------- */
+  .panel{
+    background:var(--surface-3); border:1px solid var(--line);
+    border-radius:14px; padding:1.25rem 1.4rem;
+  }
+  .controls-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:1.4rem 1.6rem;
+  }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:600; margin-bottom:.5rem;
+  }
+  .field label .readout{
+    font-family:var(--font-mono); font-size:.85rem; letter-spacing:0;
+    text-transform:none; color:var(--accent-strong); font-weight:700;
+  }
+  input[type="range"]{
+    width:100%; appearance:none; -webkit-appearance:none;
+    height:4px; border-radius:2px; background:var(--line);
+    outline-offset:6px;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    appearance:none; -webkit-appearance:none;
+    width:17px; height:17px; border-radius:50%;
+    background:var(--accent); border:2px solid var(--surface);
+    box-shadow:0 0 0 1px var(--accent); cursor:pointer; margin-top:-6.5px;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:17px; height:17px; border-radius:50%; border:2px solid var(--surface);
+    background:var(--accent); box-shadow:0 0 0 1px var(--accent); cursor:pointer;
+  }
+  input[type="range"]::-moz-range-track{ height:4px; border-radius:2px; background:var(--line); }
+  select{
+    width:100%; background:var(--surface); color:var(--ink);
+    border:1px solid var(--line); border-radius:8px; padding:.55rem .7rem;
+    font-family:var(--font-body); font-size:.88rem; cursor:pointer;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible{
+    outline:2px solid var(--accent); outline-offset:3px; border-radius:6px;
+  }
+
+  .panel-foot{
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    margin-top:1.1rem; padding-top:1rem; border-top:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .play-btn{
+    display:inline-flex; align-items:center; gap:.45rem;
+    background:var(--accent); color:var(--surface); border:none;
+    padding:.55rem 1rem; border-radius:999px; font-size:.85rem; font-weight:600;
+    cursor:pointer; font-family:var(--font-body);
+  }
+  .play-btn:hover{ background:var(--accent-strong); }
+  .panel-foot .elapsed-hint{ font-size:.8rem; color:var(--ink-faint); }
+
+  /* ---------- summary cards ---------- */
+  .summary-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:1rem; margin:1.75rem 0;
+  }
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:1.15rem 1.25rem 1.3rem; box-shadow:var(--shadow);
+  }
+  .card-head{ display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.65rem; }
+  .card-head h3{ margin:0; font-size:.82rem; font-weight:700; color:var(--ink-soft); letter-spacing:.02em; }
+  .pill{
+    display:inline-flex; align-items:center; gap:.35rem;
+    font-size:.72rem; font-weight:700; letter-spacing:.03em;
+    padding:.24rem .6rem; border-radius:999px; white-space:nowrap;
+  }
+  .pill .mark{ font-size:.6rem; line-height:1; }
+  .pill.good{ background:var(--good-soft); color:var(--good); }
+  .pill.caution{ background:var(--caution-soft); color:var(--caution); }
+  .pill.warning{ background:var(--warning-soft); color:var(--warning); }
+  .pill.danger{ background:var(--danger-soft); color:var(--danger); }
+
+  .card .metric{ font-family:var(--font-mono); font-size:1.9rem; font-weight:700; line-height:1; margin:.15rem 0 .35rem; }
+  .card .metric small{ font-family:var(--font-body); font-size:.85rem; font-weight:500; color:var(--ink-faint); margin-left:.3rem; }
+  .card .caption{ font-size:.83rem; color:var(--ink-soft); line-height:1.6; min-height:2.6em; }
+
+  .gauge-track{
+    position:relative; display:flex; height:8px; border-radius:5px; overflow:hidden;
+    margin:.8rem 0 .3rem; background:var(--surface-2);
+  }
+  .gauge-zone{ height:100%; }
+  .gauge-zone.good{ background:var(--good-soft); }
+  .gauge-zone.caution{ background:var(--caution-soft); }
+  .gauge-zone.warning{ background:var(--warning-soft); }
+  .gauge-zone.danger{ background:var(--danger-soft); }
+  .gauge-indicator{
+    position:absolute; top:-3px; width:2px; height:14px; background:var(--ink);
+    border-radius:1px; transform:translateX(-1px);
+  }
+  .gauge-scale{ display:flex; justify-content:space-between; font-size:.65rem; color:var(--ink-faint); font-family:var(--font-mono); }
+
+  .card.combined{ background:linear-gradient(180deg, var(--surface), var(--surface-2)); }
+  .card.combined .metric{ font-size:2.2rem; }
+
+  /* ---------- charts ---------- */
+  .charts-grid{
+    display:grid; grid-template-columns:1fr; gap:1rem; margin-bottom:1.75rem;
+  }
+  @media (min-width:880px){ .charts-grid{ grid-template-columns:1fr 1fr; } }
+  .chart-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:1.1rem 1.2rem 1rem; box-shadow:var(--shadow);
+  }
+  .chart-card .chart-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:.75rem; margin-bottom:.15rem; }
+  .chart-card h3{ margin:0; font-size:.95rem; font-weight:700; }
+  .chart-card .sub{ margin:.2rem 0 0; font-size:.78rem; color:var(--ink-faint); }
+  .legend{ display:flex; flex-wrap:wrap; gap:.55rem .9rem; margin:.7rem 0 .3rem; }
+  .legend .item{ display:flex; align-items:center; gap:.35rem; font-size:.72rem; color:var(--ink-soft); }
+  .legend .swatch{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .chart-wrap{ position:relative; }
+  svg.chart{ width:100%; height:auto; display:block; overflow:visible; }
+  .axis-label{ font-size:9px; fill:var(--ink-faint); font-family:var(--font-mono); }
+  .grid-line{ stroke:var(--line-soft); stroke-width:1; }
+  .curve-line{ fill:none; stroke:var(--accent); stroke-width:2; }
+  .curve-area{ fill:var(--accent); opacity:.12; }
+  .now-line{ stroke:var(--ink); stroke-width:1.3; stroke-dasharray:3 3; }
+  .now-dot{ fill:var(--ink); }
+  .hover-line{ stroke:var(--ink-faint); stroke-width:1; opacity:0; }
+  .hover-dot{ fill:var(--surface); stroke:var(--accent); stroke-width:2; opacity:0; }
+  .tooltip{
+    position:absolute; pointer-events:none; background:var(--ink); color:var(--surface);
+    font-size:.72rem; padding:.4rem .55rem; border-radius:7px; line-height:1.5;
+    transform:translate(-50%,-115%); opacity:0; transition:opacity .08s ease; white-space:nowrap;
+    font-family:var(--font-mono); z-index:5;
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .tooltip{ transition:opacity .08s ease; }
+  }
+  .table-toggle{
+    background:none; border:1px solid var(--line); color:var(--ink-soft);
+    font-size:.72rem; padding:.3rem .6rem; border-radius:7px; cursor:pointer; font-family:var(--font-body);
+  }
+  .table-toggle:hover{ border-color:var(--accent); color:var(--accent-strong); }
+  .data-table{ margin-top:.7rem; border-top:1px solid var(--line-soft); padding-top:.6rem; overflow-x:auto; display:none; }
+  .data-table.open{ display:block; }
+  .data-table table{ border-collapse:collapse; width:100%; font-size:.76rem; }
+  .data-table th, .data-table td{ text-align:right; padding:.28rem .5rem; font-family:var(--font-mono); color:var(--ink-soft); }
+  .data-table th:first-child, .data-table td:first-child{ text-align:left; font-family:var(--font-body); color:var(--ink-faint); }
+  .data-table tr:not(:last-child) td, .data-table tr:not(:last-child) th{ border-bottom:1px solid var(--line-soft); }
+
+  /* ---------- recommendation ---------- */
+  .advice{
+    border-radius:14px; padding:1.3rem 1.4rem; border:1px solid var(--line);
+    display:flex; gap:1rem; align-items:flex-start; box-shadow:var(--shadow);
+  }
+  .advice .mark{ font-size:1.4rem; line-height:1; margin-top:.1rem; }
+  .advice h3{ margin:0 0 .35rem; font-size:1.02rem; font-family:var(--font-display); font-weight:600; }
+  .advice p{ margin:0 0 .5rem; font-size:.88rem; line-height:1.75; color:var(--ink-soft); }
+  .advice ul{ margin:.3rem 0 0; padding-left:1.1rem; font-size:.85rem; color:var(--ink-soft); line-height:1.85; }
+
+  details.method{ margin-top:1.5rem; }
+  details.method summary{
+    cursor:pointer; font-size:.8rem; font-weight:600; color:var(--ink-soft);
+    padding:.4rem 0;
+  }
+  details.method .body{
+    font-size:.79rem; line-height:1.85; color:var(--ink-faint); padding:.4rem 0 .2rem;
+    max-width:74ch;
+  }
+  footer.fineprint{ margin-top:1.2rem; font-size:.74rem; color:var(--ink-faint); line-height:1.7; }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <p class="eyebrow">台所衛生シミュレーター</p>
+    <h1>その洗い物、あと何時間で危険域？</h1>
+    <p>放置時間・室温・湿度・汚れの種類から、菌の増殖とコバエの発生リスクを推定して可視化します。数値を動かして、洗い物を後回しにするとどうなるかを確かめてください。</p>
+  </header>
+
+  <section class="banner" aria-label="総合コバエ発生リスク" aria-live="polite">
+    <div class="banner-main">
+      <span class="pill" id="bannerPill"></span>
+      <div class="banner-text">
+        <p class="banner-label">総合コバエ発生リスク（洗い物・キッチン排水溝・浴室排水溝の合成値）</p>
+        <div class="banner-metric num" id="bannerMetric"></div>
+        <p class="banner-caption" id="bannerCaption"></p>
+      </div>
+    </div>
+    <div class="breakdown" id="bannerBreakdown"></div>
+  </section>
+
+  <nav class="mode-tabs" role="tablist" aria-label="表示モード">
+    <button class="mode-tab active" id="tabBtn-dish" data-panel="panel-dish" role="tab" aria-selected="true" type="button">洗い物</button>
+    <button class="mode-tab" id="tabBtn-kitchen" data-panel="panel-kitchen" role="tab" aria-selected="false" type="button">キッチン排水溝</button>
+    <button class="mode-tab" id="tabBtn-bath" data-panel="panel-bath" role="tab" aria-selected="false" type="button">お風呂排水溝</button>
+  </nav>
+
+  <div class="tab-panel active" id="panel-dish" role="tabpanel">
+
+  <section class="panel" aria-label="条件設定">
+    <div class="controls-grid">
+      <div class="field">
+        <label for="tElapsed">放置時間 <span class="readout" id="tElapsedOut">8時間</span></label>
+        <input type="range" id="tElapsed" min="0" max="240" step="1" value="8" />
+      </div>
+      <div class="field">
+        <label for="temp">室温 <span class="readout" id="tempOut">27℃</span></label>
+        <input type="range" id="temp" min="10" max="38" step="1" value="27" />
+      </div>
+      <div class="field">
+        <label for="humidity">湿度 <span class="readout" id="humidityOut">65%</span></label>
+        <input type="range" id="humidity" min="30" max="90" step="1" value="65" />
+      </div>
+      <div class="field">
+        <label for="foodType">食器の汚れ</label>
+        <select id="foodType">
+          <option value="meat" selected>肉・魚・乳製品</option>
+          <option value="starch">ご飯・パンなど炭水化物</option>
+          <option value="veg">野菜くず中心</option>
+          <option value="oil">油汚れ中心</option>
+          <option value="rinsed">軽くすすぎ済み</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel-foot">
+      <button class="play-btn" id="playBtn" type="button">
+        <span id="playIcon">▶</span> <span id="playLabel">10日間を再生してみる</span>
+      </button>
+      <span class="elapsed-hint" id="elapsedHint"></span>
+    </div>
+  </section>
+
+  <section class="summary-grid" aria-label="現在のリスク">
+    <div class="card" id="cardBacteria">
+      <div class="card-head">
+        <h3>菌の増殖リスク</h3>
+        <span class="pill" id="bPill"></span>
+      </div>
+      <div class="metric" id="bMetric"></div>
+      <div class="gauge-track">
+        <span class="gauge-zone good" style="width:25%"></span>
+        <span class="gauge-zone caution" style="width:30%"></span>
+        <span class="gauge-zone warning" style="width:25%"></span>
+        <span class="gauge-zone danger" style="width:20%"></span>
+        <div class="gauge-indicator" id="bIndicator"></div>
+      </div>
+      <div class="gauge-scale"><span>0</span><span>25</span><span>55</span><span>80</span><span>100</span></div>
+      <p class="caption" id="bCaption"></p>
+    </div>
+
+    <div class="card" id="cardFly">
+      <div class="card-head">
+        <h3>コバエ発生リスク</h3>
+        <span class="pill" id="fPill"></span>
+      </div>
+      <div class="metric" id="fMetric"></div>
+      <div class="gauge-track">
+        <span class="gauge-zone good" style="width:25%"></span>
+        <span class="gauge-zone caution" style="width:30%"></span>
+        <span class="gauge-zone warning" style="width:25%"></span>
+        <span class="gauge-zone danger" style="width:20%"></span>
+        <div class="gauge-indicator" id="fIndicator"></div>
+      </div>
+      <div class="gauge-scale"><span>0</span><span>25</span><span>55</span><span>80</span><span>100</span></div>
+      <p class="caption" id="fCaption"></p>
+    </div>
+
+    <div class="card combined" id="cardCombined">
+      <div class="card-head">
+        <h3>総合ハザード度</h3>
+        <span class="pill" id="cPill"></span>
+      </div>
+      <div class="metric" id="cMetric"></div>
+      <div class="gauge-track">
+        <span class="gauge-zone good" style="width:25%"></span>
+        <span class="gauge-zone caution" style="width:30%"></span>
+        <span class="gauge-zone warning" style="width:25%"></span>
+        <span class="gauge-zone danger" style="width:20%"></span>
+        <div class="gauge-indicator" id="cIndicator"></div>
+      </div>
+      <div class="gauge-scale"><span>0</span><span>25</span><span>55</span><span>80</span><span>100</span></div>
+      <p class="caption" id="cCaption"></p>
+    </div>
+  </section>
+
+  <section class="charts-grid" aria-label="時間経過グラフ">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3>菌の増殖倍率の推移</h3>
+          <p class="sub">0〜48時間・対数スケール</p>
+        </div>
+        <button class="table-toggle" data-target="bTable" type="button">表で見る</button>
+      </div>
+      <div class="legend">
+        <span class="item"><span class="swatch" style="background:var(--good-soft)"></span>安全</span>
+        <span class="item"><span class="swatch" style="background:var(--caution-soft)"></span>注意</span>
+        <span class="item"><span class="swatch" style="background:var(--warning-soft)"></span>警戒</span>
+        <span class="item"><span class="swatch" style="background:var(--danger-soft)"></span>危険</span>
+        <span class="item"><span class="swatch" style="background:var(--ink)"></span>現在の設定</span>
+      </div>
+      <div class="chart-wrap" id="bChartWrap">
+        <svg class="chart" id="bChart" viewBox="0 0 620 240"></svg>
+        <div class="tooltip" id="bTooltip"></div>
+      </div>
+      <div class="data-table" id="bTable">
+        <table>
+          <thead><tr><th>経過時間</th><th>増殖倍率</th><th>状態</th></tr></thead>
+          <tbody id="bTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3>コバエ発生リスクの推移</h3>
+          <p class="sub">0〜10日間・リスクスコア</p>
+        </div>
+        <button class="table-toggle" data-target="fTable" type="button">表で見る</button>
+      </div>
+      <div class="legend">
+        <span class="item"><span class="swatch" style="background:var(--good-soft)"></span>安全</span>
+        <span class="item"><span class="swatch" style="background:var(--caution-soft)"></span>注意</span>
+        <span class="item"><span class="swatch" style="background:var(--warning-soft)"></span>警戒</span>
+        <span class="item"><span class="swatch" style="background:var(--danger-soft)"></span>危険</span>
+        <span class="item"><span class="swatch" style="background:var(--ink)"></span>現在の設定</span>
+      </div>
+      <div class="chart-wrap" id="fChartWrap">
+        <svg class="chart" id="fChart" viewBox="0 0 620 240"></svg>
+        <div class="tooltip" id="fTooltip"></div>
+      </div>
+      <div class="data-table" id="fTable">
+        <table>
+          <thead><tr><th>経過時間</th><th>リスクスコア</th><th>状態</th></tr></thead>
+          <tbody id="fTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="advice" id="advice" aria-live="polite">
+    <span class="mark" id="adviceMark"></span>
+    <div>
+      <h3 id="adviceTitle"></h3>
+      <p id="adviceBody"></p>
+      <ul id="adviceList"></ul>
+    </div>
+  </section>
+
+  </div>
+
+  <div class="tab-panel" id="panel-kitchen" role="tabpanel">
+
+  <section class="panel" aria-label="キッチン排水溝の条件設定">
+    <div class="controls-grid">
+      <div class="field">
+        <label for="kDays">最後に掃除してからの日数 <span class="readout" id="kDaysOut">5日</span></label>
+        <input type="range" id="kDays" min="0" max="30" step="1" value="5" />
+      </div>
+      <div class="field">
+        <label for="kUsage">使用頻度</label>
+        <select id="kUsage">
+          <option value="daily" selected>毎日使う</option>
+          <option value="occasional">たまに使う</option>
+          <option value="rare">ほとんど使わない</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="kTemp">室温 <span class="readout" id="kTempOut">26℃</span></label>
+        <input type="range" id="kTemp" min="10" max="38" step="1" value="26" />
+      </div>
+    </div>
+  </section>
+
+  <section class="summary-grid" aria-label="キッチン排水溝の現在のリスク">
+    <div class="card">
+      <div class="card-head">
+        <h3>ヌメリ・雑菌蓄積リスク</h3>
+        <span class="pill" id="kSlimePill"></span>
+      </div>
+      <div class="metric" id="kSlimeMetric"></div>
+      <div class="gauge-track">
+        <span class="gauge-zone good" style="width:25%"></span>
+        <span class="gauge-zone caution" style="width:30%"></span>
+        <span class="gauge-zone warning" style="width:25%"></span>
+        <span class="gauge-zone danger" style="width:20%"></span>
+        <div class="gauge-indicator" id="kSlimeIndicator"></div>
+      </div>
+      <div class="gauge-scale"><span>0</span><span>25</span><span>55</span><span>80</span><span>100</span></div>
+      <p class="caption" id="kSlimeCaption"></p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>コバエ発生リスク（キッチン排水溝）</h3>
+        <span class="pill" id="kFlyPill"></span>
+      </div>
+      <div class="metric" id="kFlyMetric"></div>
+      <div class="gauge-track">
+        <span class="gauge-zone good" style="width:25%"></span>
+        <span class="gauge-zone caution" style="width:30%"></span>
+        <span class="gauge-zone warning" style="width:25%"></span>
+        <span class="gauge-zone danger" style="width:20%"></span>
+        <div class="gauge-indicator" id="kFlyIndicator"></div>
+      </div>
+      <div class="gauge-scale"><span>0</span><span>25</span><span>55</span><span>80</span><span>100</span></div>
+      <p class="caption" id="kFlyCaption"></p>
+    </div>
+  </section>
+
+  <section class="charts-grid" aria-label="キッチン排水溝の推移グラフ" style="grid-template-columns:1fr;">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3>コバエ発生リスクの推移（キッチン排水溝）</h3>
+          <p class="sub">0〜30日間・リスクスコア</p>
+        </div>
+        <button class="table-toggle" data-target="kTable" type="button">表で見る</button>
+      </div>
+      <div class="legend">
+        <span class="item"><span class="swatch" style="background:var(--good-soft)"></span>安全</span>
+        <span class="item"><span class="swatch" style="background:var(--caution-soft)"></span>注意</span>
+        <span class="item"><span class="swatch" style="background:var(--warning-soft)"></span>警戒</span>
+        <span class="item"><span class="swatch" style="background:var(--danger-soft)"></span>危険</span>
+        <span class="item"><span class="swatch" style="background:var(--ink)"></span>現在の設定</span>
+      </div>
+      <div class="chart-wrap" id="kChartWrap">
+        <svg class="chart" id="kChart" viewBox="0 0 620 240"></svg>
+        <div class="tooltip" id="kTooltip"></div>
+      </div>
+      <div class="data-table" id="kTable">
+        <table>
+          <thead><tr><th>経過日数</th><th>リスクスコア</th><th>状態</th></tr></thead>
+          <tbody id="kTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="advice" id="kAdvice" aria-live="polite">
+    <span class="mark" id="kAdviceMark"></span>
+    <div>
+      <h3 id="kAdviceTitle"></h3>
+      <p id="kAdviceBody"></p>
+      <ul id="kAdviceList"></ul>
+    </div>
+  </section>
+
+  </div>
+
+  <div class="tab-panel" id="panel-bath" role="tabpanel">
+
+  <section class="panel" aria-label="お風呂排水溝の条件設定">
+    <div class="controls-grid">
+      <div class="field">
+        <label for="bDays">最後に掃除してからの日数 <span class="readout" id="bDaysOut">5日</span></label>
+        <input type="range" id="bDays" min="0" max="30" step="1" value="5" />
+      </div>
+      <div class="field">
+        <label for="bUsage">使用頻度</label>
+        <select id="bUsage">
+          <option value="daily" selected>毎日使う</option>
+          <option value="occasional">たまに使う</option>
+          <option value="rare">ほとんど使わない</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="bHumidity">浴室の湿度 <span class="readout" id="bHumidityOut">70%</span></label>
+        <input type="range" id="bHumidity" min="40" max="95" step="1" value="70" />
+      </div>
+    </div>
+  </section>
+
+  <section class="summary-grid" aria-label="お風呂排水溝の現在のリスク">
+    <div class="card">
+      <div class="card-head">
+        <h3>ヌメリ・雑菌蓄積リスク</h3>
+        <span class="pill" id="bSlimePill"></span>
+      </div>
+      <div class="metric" id="bSlimeMetric"></div>
+      <div class="gauge-track">
+        <span class="gauge-zone good" style="width:25%"></span>
+        <span class="gauge-zone caution" style="width:30%"></span>
+        <span class="gauge-zone warning" style="width:25%"></span>
+        <span class="gauge-zone danger" style="width:20%"></span>
+        <div class="gauge-indicator" id="bSlimeIndicator"></div>
+      </div>
+      <div class="gauge-scale"><span>0</span><span>25</span><span>55</span><span>80</span><span>100</span></div>
+      <p class="caption" id="bSlimeCaption"></p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>コバエ発生リスク（浴室排水溝）</h3>
+        <span class="pill" id="bFlyPill"></span>
+      </div>
+      <div class="metric" id="bFlyMetric"></div>
+      <div class="gauge-track">
+        <span class="gauge-zone good" style="width:25%"></span>
+        <span class="gauge-zone caution" style="width:30%"></span>
+        <span class="gauge-zone warning" style="width:25%"></span>
+        <span class="gauge-zone danger" style="width:20%"></span>
+        <div class="gauge-indicator" id="bFlyIndicator"></div>
+      </div>
+      <div class="gauge-scale"><span>0</span><span>25</span><span>55</span><span>80</span><span>100</span></div>
+      <p class="caption" id="bFlyCaption"></p>
+    </div>
+  </section>
+
+  <section class="charts-grid" aria-label="お風呂排水溝の推移グラフ" style="grid-template-columns:1fr;">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3>コバエ発生リスクの推移（浴室排水溝）</h3>
+          <p class="sub">0〜30日間・リスクスコア</p>
+        </div>
+        <button class="table-toggle" data-target="bDrainTable" type="button">表で見る</button>
+      </div>
+      <div class="legend">
+        <span class="item"><span class="swatch" style="background:var(--good-soft)"></span>安全</span>
+        <span class="item"><span class="swatch" style="background:var(--caution-soft)"></span>注意</span>
+        <span class="item"><span class="swatch" style="background:var(--warning-soft)"></span>警戒</span>
+        <span class="item"><span class="swatch" style="background:var(--danger-soft)"></span>危険</span>
+        <span class="item"><span class="swatch" style="background:var(--ink)"></span>現在の設定</span>
+      </div>
+      <div class="chart-wrap" id="bDrainChartWrap">
+        <svg class="chart" id="bDrainChart" viewBox="0 0 620 240"></svg>
+        <div class="tooltip" id="bDrainTooltip"></div>
+      </div>
+      <div class="data-table" id="bDrainTable">
+        <table>
+          <thead><tr><th>経過日数</th><th>リスクスコア</th><th>状態</th></tr></thead>
+          <tbody id="bDrainTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="advice" id="bAdvice" aria-live="polite">
+    <span class="mark" id="bAdviceMark"></span>
+    <div>
+      <h3 id="bAdviceTitle"></h3>
+      <p id="bAdviceBody"></p>
+      <ul id="bAdviceList"></ul>
+    </div>
+  </section>
+
+  </div>
+
+  <details class="method">
+    <summary>この推定モデルについて</summary>
+    <div class="body">
+      菌の増殖は、37℃付近を最適温度とする増殖速度モデル（至適温度から離れるほど倍加時間が長くなる指数近似）に、汚れの種類による増えやすさと湿度による水分保持の影響を掛け合わせて推定しています。コバエの発生リスクは、におい等による誘引が始まるタイミングと、卵から成虫までの発育期間（気温が10℃上がるごとに発育が速くなる目安）をもとに、産卵・幼虫期・新成虫の羽化までの段階を推定しています。キッチン・浴室の排水溝については、最後に掃除してからの日数と使用頻度から汚れ（ヌメリ・バイオフィルム）の蓄積度を仮定し、その蓄積度と室温・湿度からコバエ（チョウバエ等）の発生しやすさを見積もっています。総合コバエ発生リスクは、洗い物・キッチン排水溝・浴室排水溝の3つのスコアのうち最大値を重視しつつ、平均値もあわせて合成した値です。いずれも一般的な食品衛生・害虫防除の目安を単純化した教育目的の概算であり、実際の菌数や発生時期を保証するものではありません。
+    </div>
+  </details>
+
+  <footer class="fineprint">
+    本ツールは家庭での洗い物の放置を防ぐための啓発用シミュレーターです。医療・食品衛生上の判断は、必ず公的機関のガイドラインに従ってください。
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= model ================= */
+  const FOOD_MULT = { meat:1.3, starch:1.0, veg:0.85, oil:0.9, rinsed:0.5 };
+  const FOOD_LABEL = { meat:"肉・魚・乳製品", starch:"炭水化物", veg:"野菜くず", oil:"油汚れ", rinsed:"すすぎ済み" };
+
+  function bacteriaK(T, food, hum){
+    const kmax = 2.0794, sigma = 7.84, topt = 37;
+    const base = kmax * Math.exp(-((T-topt)**2)/(2*sigma*sigma));
+    const humMult = 0.6 + 0.008*hum;
+    return base * FOOD_MULT[food] * humMult;
+  }
+  function bacteriaMultiplier(t,T,food,hum){ return Math.exp(bacteriaK(T,food,hum)*t); }
+  function bacteriaLogGrowth(t,T,food,hum){ return (bacteriaK(T,food,hum)*t)/Math.LN10; }
+  function bacteriaScore(logGrowth){ return clamp(100*(1-Math.exp(-logGrowth/4)),0,100); }
+
+  function flyColdFactor(T){ return clamp((T-8)/12,0,1); }
+  function flyHumidityBoost(h){ return 1 + Math.max(0,(h-50))*0.004; }
+  function flyCycleHours(T){
+    if(T<10) return Infinity;
+    const days = 9*Math.pow(2,-(T-25)/10);
+    return Math.max(5,days)*24;
+  }
+  function flyScore(t,T,hum){
+    const cf = flyColdFactor(T);
+    if(cf<=0) return 0;
+    const cycleH = flyCycleHours(T)/flyHumidityBoost(hum);
+    const attraction = 100/(1+Math.exp(-(t-18)/6));
+    const infestation = 100/(1+Math.exp(-(t-cycleH)/(cycleH*0.12)));
+    return clamp((attraction*0.4+infestation*0.6)*cf,0,100);
+  }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+  function compositeScore(scores){
+    const max = Math.max(...scores);
+    const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+    return clamp(0.6*max + 0.4*avg, 0, 100);
+  }
+  function combinedScore(b,f){ return compositeScore([b,f]); }
+
+  /* ---- drain (排水溝) model — independent コバエ risk source ---- */
+  const USAGE_MULT = { daily:1.15, occasional:0.75, rare:0.45 };
+  const USAGE_LABEL = { daily:'毎日使う', occasional:'たまに使う', rare:'ほとんど使わない' };
+  const KITCHEN_MID = 9;   // grease/food residue attracts flies fastest
+  const BATH_MID = 16;     // hair/soap scum biofilm builds up more slowly
+
+  function kitchenTempFactor(T){ return clamp(0.5+(T-15)*0.03, 0.4, 1.35); }
+  function bathHumidityFactor(h){ return clamp(0.5+(h-40)*0.012, 0.4, 1.35); }
+  function drainBuildup(days, usageKey){ return days*USAGE_MULT[usageKey]; }
+  function drainFlyScore(days, usageKey, envFactor, midpointDays){
+    const buildup = drainBuildup(days, usageKey);
+    const base = 100/(1+Math.exp(-(buildup-midpointDays)/(midpointDays*0.28)));
+    return clamp(base*envFactor, 0, 100);
+  }
+  function drainSlimeScore(days, usageKey, envFactor, midpointDays){
+    const buildup = drainBuildup(days, usageKey);
+    const mid = midpointDays*0.5;
+    const base = 100/(1+Math.exp(-(buildup-mid)/(mid*0.3+0.5)));
+    return clamp(base*envFactor, 0, 100);
+  }
+  function slimeCaption(score){
+    if(score<25) return "排水溝はまだきれいな状態です。";
+    if(score<55) return "汚れが溜まり始めています。ブラシで軽く掃除しましょう。";
+    if(score<80) return "ヌメリが目立つ状態です。ブラシとパイプクリーナーで内部まで掃除しましょう。";
+    return "雑菌・ヌメリが大量に蓄積している可能性があります。徹底的な洗浄が必要です。";
+  }
+  function drainFlyCaption(score){
+    if(score<25) return "コバエが発生する可能性は低い状態です。";
+    if(score<55) return "におい等でコバエが誘引され始めるおそれがあります。";
+    if(score<80) return "排水溝の汚れが産卵・繁殖の場所になっているおそれがあります。";
+    return "排水溝がコバエの主な発生源になっている可能性が高い状態です。今すぐの清掃をおすすめします。";
+  }
+
+  function tierOf(score){
+    if(score<25) return {key:'good', label:'安全', mark:'●'};
+    if(score<55) return {key:'caution', label:'注意', mark:'▲'};
+    if(score<80) return {key:'warning', label:'警戒', mark:'◆'};
+    return {key:'danger', label:'危険', mark:'■'};
+  }
+
+  function formatMultiplier(m){
+    if(m<10) return m.toFixed(1);
+    if(m<1000) return Math.round(m).toLocaleString('ja-JP');
+    const exp = Math.floor(Math.log10(m));
+    const mant = m/Math.pow(10,exp);
+    return `${mant.toFixed(1)}×10^${exp}`;
+  }
+  function formatDH(t){
+    const d = Math.floor(t/24), h = Math.round(t%24);
+    if(d<=0) return `${h}時間`;
+    if(h===0) return `${d}日`;
+    return `${d}日${h}時間`;
+  }
+
+  function bacteriaCaption(score){
+    if(score<25) return "菌の増殖はまだ緩やかです。";
+    if(score<55) return "菌が増え始めています。早めに洗いましょう。";
+    if(score<80) return "菌が大きく増殖しています。食中毒リスクに注意。";
+    return "菌が爆発的に増殖している可能性があります。至急洗浄・消毒を。";
+  }
+  function flyCaption(t,T,hum){
+    const cf = flyColdFactor(T);
+    if(cf<=0.05) return "低温のためコバエの活動は抑えられています。";
+    const cycleH = flyCycleHours(T)/flyHumidityBoost(hum);
+    if(t<12) return "コバエはまだ誘引されにくい段階です。";
+    if(t<24) return "におい等でコバエが誘引され始めるおそれがあります。";
+    if(t<cycleH*0.6) return "コバエが卵を産みつけている可能性があります。";
+    if(t<cycleH) return "見えない場所で幼虫が育っている可能性があります。";
+    return `目安の発育期間（約${formatDH(cycleH)}）を超えており、新成虫が発生している可能性があります。`;
+  }
+
+  /* ================= DOM refs ================= */
+  const $ = id => document.getElementById(id);
+  const tElapsed = $('tElapsed'), temp = $('temp'), humidity = $('humidity'), foodType = $('foodType');
+  const tElapsedOut = $('tElapsedOut'), tempOut = $('tempOut'), humidityOut = $('humidityOut');
+
+  function niceTicks(max, count){
+    if(max<=0) max=1;
+    const rough = max/count;
+    const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+    const norm = rough/mag;
+    let step;
+    if(norm<1.5) step=1*mag; else if(norm<3) step=2*mag; else if(norm<7) step=5*mag; else step=10*mag;
+    const ticks=[];
+    for(let v=0; v<=max+1e-9; v+=step) ticks.push(Math.round(v*1000)/1000);
+    if(ticks.length<2) ticks.push(max);
+    return ticks;
+  }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs){
+    const e = document.createElementNS(svgNS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  const PAD = { l:34, r:12, t:10, b:22 };
+  const W = 620, H = 240;
+  const plotW = W-PAD.l-PAD.r, plotH = H-PAD.t-PAD.b;
+
+  function buildChart(svgEl_, opts){
+    // opts: {xMax, yMax, sample(t)-> value, bands:[{to,tier}], yFmt, xFmt}
+    svgEl_.innerHTML = "";
+    svgEl_.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+    const xScale = t => PAD.l + (t/opts.xMax)*plotW;
+    const yScale = v => PAD.t + plotH - (clamp(v,0,opts.yMax)/opts.yMax)*plotH;
+
+    // severity bands
+    let prev = 0;
+    opts.bands.forEach(b=>{
+      const y1 = yScale(Math.min(b.to,opts.yMax));
+      const y0 = yScale(prev);
+      const rect = el('rect',{
+        x:PAD.l, y:y1, width:plotW, height:Math.max(0,y0-y1),
+        fill:`var(--${b.tier}-soft)`, opacity:.55
+      });
+      svgEl_.appendChild(rect);
+      prev = b.to;
+    });
+
+    // gridlines + y ticks
+    const yTicks = niceTicks(opts.yMax, 4);
+    yTicks.forEach(v=>{
+      const y = yScale(v);
+      svgEl_.appendChild(el('line',{ class:'grid-line', x1:PAD.l, x2:W-PAD.r, y1:y, y2:y }));
+      const t = el('text',{ class:'axis-label', x:PAD.l-6, y:y+3, 'text-anchor':'end' });
+      t.textContent = opts.yFmt(v);
+      svgEl_.appendChild(t);
+    });
+    // x ticks
+    const xTickCount = 5;
+    for(let i=0;i<=xTickCount;i++){
+      const tv = (opts.xMax/xTickCount)*i;
+      const x = xScale(tv);
+      const t = el('text',{ class:'axis-label', x:x, y:H-6, 'text-anchor': i===0?'start':(i===xTickCount?'end':'middle') });
+      t.textContent = opts.xFmt(tv);
+      svgEl_.appendChild(t);
+    }
+
+    // curve
+    const N = 96;
+    let dPath = "", aPath = `M ${xScale(0)} ${yScale(0)} `;
+    for(let i=0;i<=N;i++){
+      const t = (opts.xMax/N)*i;
+      const v = opts.sample(t);
+      const x = xScale(t), y = yScale(v);
+      dPath += (i===0? `M ${x} ${y} ` : `L ${x} ${y} `);
+      aPath += `L ${x} ${y} `;
+    }
+    aPath += `L ${xScale(opts.xMax)} ${yScale(0)} Z`;
+    svgEl_.appendChild(el('path',{ class:'curve-area', d:aPath }));
+    svgEl_.appendChild(el('path',{ class:'curve-line', d:dPath }));
+
+    // current-time marker
+    const curT = clamp(opts.currentT,0,opts.xMax);
+    const curV = opts.sample(curT);
+    const cx = xScale(curT), cy = yScale(curV);
+    svgEl_.appendChild(el('line',{ class:'now-line', x1:cx, x2:cx, y1:PAD.t, y2:H-PAD.b }));
+    svgEl_.appendChild(el('circle',{ class:'now-dot', cx:cx, cy:cy, r:4 }));
+    if(opts.currentT>opts.xMax){
+      const t = el('text',{ class:'axis-label', x:cx-4, y:PAD.t+10, 'text-anchor':'end' });
+      t.textContent = `${opts.xFmt(opts.xMax)}+`;
+      svgEl_.appendChild(t);
+    }
+
+    // hover layer
+    const hoverLine = el('line',{ class:'hover-line', x1:0, x2:0, y1:PAD.t, y2:H-PAD.b });
+    const hoverDot = el('circle',{ class:'hover-dot', r:4.5, cx:0, cy:0 });
+    svgEl_.appendChild(hoverLine);
+    svgEl_.appendChild(hoverDot);
+    const hitRect = el('rect',{ x:PAD.l, y:PAD.t, width:plotW, height:plotH, fill:'transparent', style:'cursor:crosshair' });
+    svgEl_.appendChild(hitRect);
+
+    return { xScale, yScale, hoverLine, hoverDot, hitRect };
+  }
+
+  function attachHover(svgEl_, refs, opts, tooltipEl){
+    function move(evt){
+      const pt = svgEl_.createSVGPoint();
+      const src = evt.touches ? evt.touches[0] : evt;
+      pt.x = src.clientX; pt.y = src.clientY;
+      const ctm = svgEl_.getScreenCTM();
+      if(!ctm) return;
+      const loc = pt.matrixTransform(ctm.inverse());
+      let t = ((loc.x-PAD.l)/plotW)*opts.xMax;
+      t = clamp(t,0,opts.xMax);
+      const v = opts.sample(t);
+      const x = refs.xScale(t), y = refs.yScale(v);
+      refs.hoverLine.setAttribute('x1',x); refs.hoverLine.setAttribute('x2',x);
+      refs.hoverLine.style.opacity = 1;
+      refs.hoverDot.setAttribute('cx',x); refs.hoverDot.setAttribute('cy',y);
+      refs.hoverDot.style.opacity = 1;
+      const rectBounds = svgEl_.getBoundingClientRect();
+      const px = (x/W)*rectBounds.width;
+      const py = (y/H)*rectBounds.height;
+      tooltipEl.style.left = px+'px';
+      tooltipEl.style.top = py+'px';
+      tooltipEl.innerHTML = opts.tooltip(t,v);
+      tooltipEl.style.opacity = 1;
+    }
+    function leave(){
+      refs.hoverLine.style.opacity = 0;
+      refs.hoverDot.style.opacity = 0;
+      tooltipEl.style.opacity = 0;
+    }
+    svgEl_.addEventListener('mousemove', move);
+    svgEl_.addEventListener('mouseleave', leave);
+    svgEl_.addEventListener('touchmove', move, {passive:true});
+    svgEl_.addEventListener('touchend', leave);
+  }
+
+  const bChart = $('bChart'), fChart = $('fChart');
+  const bTooltip = $('bTooltip'), fTooltip = $('fTooltip');
+  let bHover = null, fHover = null;
+
+  function renderDish(){
+    const t = +tElapsed.value, T = +temp.value, hum = +humidity.value, food = foodType.value;
+    tElapsedOut.textContent = formatDH(t);
+    tempOut.textContent = T+'℃';
+    humidityOut.textContent = hum+'%';
+
+    const bLog = bacteriaLogGrowth(t,T,food,hum);
+    const bMult = bacteriaMultiplier(t,T,food,hum);
+    const bScore = bacteriaScore(bLog);
+    const fScore = flyScore(t,T,hum);
+    const cScore = combinedScore(bScore,fScore);
+
+    const bTier = tierOf(bScore), fTier = tierOf(fScore), cTier = tierOf(cScore);
+
+    setPill('bPill', bTier);
+    $('bMetric').innerHTML = `<span class="num">×${formatMultiplier(bMult)}</span><small>推定増殖倍率</small>`;
+    $('bIndicator').style.left = bScore+'%';
+    $('bCaption').textContent = bacteriaCaption(bScore);
+
+    setPill('fPill', fTier);
+    $('fMetric').innerHTML = `<span class="num">${Math.round(fScore)}</span><small>/ 100 リスクスコア</small>`;
+    $('fIndicator').style.left = fScore+'%';
+    $('fCaption').textContent = flyCaption(t,T,hum);
+
+    setPill('cPill', cTier);
+    $('cMetric').innerHTML = `<span class="num">${Math.round(cScore)}</span><small>/ 100 総合スコア</small>`;
+    $('cIndicator').style.left = cScore+'%';
+    $('cCaption').textContent = combinedCaption(cTier,bScore,fScore);
+
+    renderAdvice(cTier,bScore,fScore,t,T,hum,food);
+
+    // bacteria chart, fixed domain 0-48h, dynamic y-max
+    const bYMax = Math.max(3, bacteriaLogGrowth(48,T,food,hum)*1.15);
+    const bBands = [
+      {to: -4*Math.log(0.75), tier:'good'},
+      {to: -4*Math.log(0.45), tier:'caution'},
+      {to: -4*Math.log(0.20), tier:'warning'},
+      {to: bYMax, tier:'danger'}
+    ];
+    const bOpts = {
+      xMax:48, yMax:bYMax, currentT:t, bands:bBands,
+      sample: (tt)=> bacteriaLogGrowth(tt,T,food,hum),
+      yFmt: v => '×10^'+Math.round(v),
+      xFmt: v => Math.round(v)+'h',
+      tooltip: (tt,v) => `${formatDH(tt)}：約×${formatMultiplier(Math.pow(10,v))}`
+    };
+    const bRefs = buildChart(bChart, bOpts);
+    bChart.querySelectorAll('.hover-line,.hover-dot,rect[style*="cursor"]').forEach(n=>{});
+    if(bHover) { /* listeners persist via new elements each render; re-attach */ }
+    attachHover(bChart, bRefs, bOpts, bTooltip);
+
+    // fly chart, fixed domain 0-240h (10 days)
+    const fBands = [ {to:25,tier:'good'}, {to:55,tier:'caution'}, {to:80,tier:'warning'}, {to:100,tier:'danger'} ];
+    const fOpts = {
+      xMax:240, yMax:100, currentT:t, bands:fBands,
+      sample: (tt)=> flyScore(tt,T,hum),
+      yFmt: v => Math.round(v),
+      xFmt: v => Math.round(v/24)+'日',
+      tooltip: (tt,v) => `${formatDH(tt)}：リスク ${Math.round(v)}`
+    };
+    const fRefs = buildChart(fChart, fOpts);
+    attachHover(fChart, fRefs, fOpts, fTooltip);
+
+    renderTable('bTableBody', [2,6,12,24,36,48], tt=>{
+      const m = bacteriaMultiplier(tt,T,food,hum);
+      const s = bacteriaScore(bacteriaLogGrowth(tt,T,food,hum));
+      return [formatDH(tt), '×'+formatMultiplier(m), tierOf(s).label];
+    });
+    renderTable('fTableBody', [24,48,72,120,168,240], tt=>{
+      const s = flyScore(tt,T,hum);
+      return [formatDH(tt), Math.round(s), tierOf(s).label];
+    });
+
+    return { flyScoreVal: fScore };
+  }
+
+  function setPill(id, tier){
+    const p = $(id);
+    p.className = 'pill '+tier.key;
+    p.innerHTML = `<span class="mark">${tier.mark}</span>${tier.label}`;
+  }
+
+  function combinedCaption(tier,bScore,fScore){
+    const dominant = bScore>=fScore ? '菌の増殖' : 'コバエの発生';
+    if(tier.key==='good') return `現時点でのリスクは低めです（主な要因: ${dominant}）。`;
+    if(tier.key==='caution') return `軽い注意が必要です（主な要因: ${dominant}）。`;
+    if(tier.key==='warning') return `リスクが高まっています（主な要因: ${dominant}）。`;
+    return `重大なリスクです（主な要因: ${dominant}）。すぐの対応を推奨します。`;
+  }
+
+  function renderAdvice(tier,bScore,fScore,t,T,hum,food){
+    const mark = $('adviceMark'), title = $('adviceTitle'), body = $('adviceBody'), list = $('adviceList');
+    const marks = {good:'✓', caution:'!', warning:'!!', danger:'⚠'};
+    mark.textContent = marks[tier.key];
+    mark.style.color = `var(--${tier.key})`;
+    const titles = {
+      good:'今のところ大丈夫。でも早めが安心です',
+      caution:'そろそろ洗い物のタイミングです',
+      warning:'なるべく早く洗い物を済ませましょう',
+      danger:'今すぐの対応をおすすめします'
+    };
+    title.textContent = titles[tier.key];
+    body.textContent = `${FOOD_LABEL[food]}の食器を室温${T}℃・湿度${hum}%で${formatDH(t)}放置した場合の推定です。`+
+      (bScore>=fScore ? bacteriaCaption(bScore) : flyCaption(t,T,hum));
+
+    const items = [];
+    if(tier.key!=='good') items.push('食器はためこまず、食後すぐに浸け置き・洗浄する');
+    if(fScore>=25) items.push('三角コーナーや排水口の生ゴミは密閉して早めに捨てる');
+    if(bScore>=55) items.push('スポンジや台拭きも定期的に熱湯・漂白で消毒する');
+    if(fScore>=55) items.push('排水口カバーや換気で、においの発生源を断つ');
+    if(tier.key==='danger') items.push('シンク周りを中性・塩素系洗剤でしっかり洗浄する');
+    if(items.length===0) items.push('この調子で、食後はできるだけ早めに洗い物を済ませましょう');
+    list.innerHTML = items.map(i=>`<li>${i}</li>`).join('');
+  }
+
+  function renderTable(bodyId, hours, rowFn){
+    const tbody = $(bodyId);
+    tbody.innerHTML = hours.map(h=>{
+      const [a,b,c] = rowFn(h);
+      return `<tr><th scope="row">${a}</th><td>${b}</td><td>${c}</td></tr>`;
+    }).join('');
+  }
+
+  /* ---- drain panel (kitchen / bath) — generic renderer ---- */
+  function renderDrainPanel(cfg){
+    const days = +cfg.daysEl.value;
+    const usage = cfg.usageEl.value;
+    const envVal = +cfg.envEl.value;
+    cfg.daysOut.textContent = days+'日';
+    cfg.envOut.textContent = envVal + cfg.envUnit;
+
+    const envFactor = cfg.envFactorFn(envVal);
+    const flyScoreVal = drainFlyScore(days, usage, envFactor, cfg.midpoint);
+    const slimeScoreVal = drainSlimeScore(days, usage, envFactor, cfg.midpoint);
+    const flyTier = tierOf(flyScoreVal), slimeTier = tierOf(slimeScoreVal);
+
+    setPill(cfg.slimePillId, slimeTier);
+    $(cfg.slimeMetricId).innerHTML = `<span class="num">${Math.round(slimeScoreVal)}</span><small>/ 100</small>`;
+    $(cfg.slimeIndicatorId).style.left = slimeScoreVal+'%';
+    $(cfg.slimeCaptionId).textContent = slimeCaption(slimeScoreVal);
+
+    setPill(cfg.flyPillId, flyTier);
+    $(cfg.flyMetricId).innerHTML = `<span class="num">${Math.round(flyScoreVal)}</span><small>/ 100</small>`;
+    $(cfg.flyIndicatorId).style.left = flyScoreVal+'%';
+    $(cfg.flyCaptionId).textContent = drainFlyCaption(flyScoreVal);
+
+    const bands = [ {to:25,tier:'good'}, {to:55,tier:'caution'}, {to:80,tier:'warning'}, {to:100,tier:'danger'} ];
+    const opts = {
+      xMax:30, yMax:100, currentT:days, bands,
+      sample: dd => drainFlyScore(dd, usage, envFactor, cfg.midpoint),
+      yFmt: v => Math.round(v),
+      xFmt: v => Math.round(v)+'日',
+      tooltip: (dd,v) => `${Math.round(dd)}日：リスク ${Math.round(v)}`
+    };
+    const chartSvg = $(cfg.chartId);
+    const refs = buildChart(chartSvg, opts);
+    attachHover(chartSvg, refs, opts, $(cfg.tooltipId));
+
+    renderTable(cfg.tableBodyId, [3,7,14,21,30], dd=>{
+      const s = drainFlyScore(dd, usage, envFactor, cfg.midpoint);
+      return [dd+'日', Math.round(s), tierOf(s).label];
+    });
+
+    const mark = $(cfg.adviceMarkId), title = $(cfg.adviceTitleId), body = $(cfg.adviceBodyId), list = $(cfg.adviceListId);
+    const tier = tierOf(Math.max(flyScoreVal, slimeScoreVal));
+    const marksMap = {good:'✓', caution:'!', warning:'!!', danger:'⚠'};
+    mark.textContent = marksMap[tier.key];
+    mark.style.color = `var(--${tier.key})`;
+    const titleMap = {
+      good: `${cfg.kindLabel}はきれいな状態です`,
+      caution: `そろそろ${cfg.kindLabel}の掃除をおすすめします`,
+      warning: `${cfg.kindLabel}の汚れが溜まっています`,
+      danger: `${cfg.kindLabel}が主な発生源になっている可能性`
+    };
+    title.textContent = titleMap[tier.key];
+    body.textContent = `${USAGE_LABEL[usage]}・最後の掃除から${days}日が経過した場合の推定です。` + slimeCaption(slimeScoreVal);
+    const items = [];
+    if(tier.key!=='good') items.push('排水口カバー・ゴミ受けのぬめりを歯ブラシ等で落とす');
+    if(slimeScoreVal>=55) items.push('パイプクリーナーや漂白剤で内部の配管もあわせて洗浄する');
+    if(flyScoreVal>=55) items.push('排水口にふた・カバーをして、卵を産みつけられないようにする');
+    if(tier.key==='danger') items.push('市販の排水管用コバエ駆除剤の使用も検討する');
+    if(items.length===0) items.push(`このペースなら大丈夫です。${cfg.midpoint<12?'週1回':'2週に1回'}程度の掃除を目安に続けましょう`);
+    list.innerHTML = items.map(i=>`<li>${i}</li>`).join('');
+
+    return { flyScoreVal, slimeScoreVal };
+  }
+
+  const kitchenCfg = {
+    daysEl:$('kDays'), usageEl:$('kUsage'), envEl:$('kTemp'),
+    daysOut:$('kDaysOut'), envOut:$('kTempOut'), envUnit:'℃',
+    envFactorFn:kitchenTempFactor, midpoint:KITCHEN_MID, kindLabel:'キッチン排水溝',
+    slimePillId:'kSlimePill', slimeMetricId:'kSlimeMetric', slimeIndicatorId:'kSlimeIndicator', slimeCaptionId:'kSlimeCaption',
+    flyPillId:'kFlyPill', flyMetricId:'kFlyMetric', flyIndicatorId:'kFlyIndicator', flyCaptionId:'kFlyCaption',
+    chartId:'kChart', tooltipId:'kTooltip', tableBodyId:'kTableBody',
+    adviceMarkId:'kAdviceMark', adviceTitleId:'kAdviceTitle', adviceBodyId:'kAdviceBody', adviceListId:'kAdviceList'
+  };
+  const bathCfg = {
+    daysEl:$('bDays'), usageEl:$('bUsage'), envEl:$('bHumidity'),
+    daysOut:$('bDaysOut'), envOut:$('bHumidityOut'), envUnit:'%',
+    envFactorFn:bathHumidityFactor, midpoint:BATH_MID, kindLabel:'浴室排水溝',
+    slimePillId:'bSlimePill', slimeMetricId:'bSlimeMetric', slimeIndicatorId:'bSlimeIndicator', slimeCaptionId:'bSlimeCaption',
+    flyPillId:'bFlyPill', flyMetricId:'bFlyMetric', flyIndicatorId:'bFlyIndicator', flyCaptionId:'bFlyCaption',
+    chartId:'bDrainChart', tooltipId:'bDrainTooltip', tableBodyId:'bDrainTableBody',
+    adviceMarkId:'bAdviceMark', adviceTitleId:'bAdviceTitle', adviceBodyId:'bAdviceBody', adviceListId:'bAdviceList'
+  };
+
+  function renderBanner(dishFly, kitchenFly, bathFly){
+    const scores = [dishFly, kitchenFly, bathFly];
+    const labels = ['洗い物', 'キッチン排水溝', '浴室排水溝'];
+    const overall = compositeScore(scores);
+    const tier = tierOf(overall);
+    setPill('bannerPill', tier);
+    $('bannerMetric').textContent = Math.round(overall) + ' / 100';
+    const maxIdx = scores.indexOf(Math.max(...scores));
+    $('bannerCaption').textContent = `主な要因: ${labels[maxIdx]}（${Math.round(scores[maxIdx])}点）`;
+    $('bannerBreakdown').innerHTML = labels.map((l,i)=>`
+      <div class="chip ${i===maxIdx?'dominant':''}">
+        <span class="chip-label">${l}</span>
+        <span class="chip-val num">${Math.round(scores[i])}</span>
+      </div>`).join('');
+  }
+
+  function renderAll(){
+    const dish = renderDish();
+    const kitchen = renderDrainPanel(kitchenCfg);
+    const bath = renderDrainPanel(bathCfg);
+    renderBanner(dish.flyScoreVal, kitchen.flyScoreVal, bath.flyScoreVal);
+  }
+
+  [tElapsed, temp, humidity, foodType].forEach(inp=>{
+    inp.addEventListener('input', ()=>{ stopPlay(); renderAll(); });
+  });
+  [kitchenCfg.daysEl, kitchenCfg.usageEl, kitchenCfg.envEl,
+   bathCfg.daysEl, bathCfg.usageEl, bathCfg.envEl].forEach(inp=>{
+    inp.addEventListener('input', renderAll);
+  });
+
+  document.querySelectorAll('.mode-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-tab').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      $(btn.dataset.panel).classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.table-toggle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = $(btn.dataset.target);
+      const open = target.classList.toggle('open');
+      btn.textContent = open ? '表を閉じる' : '表で見る';
+    });
+  });
+
+  /* ---- play/simulate ---- */
+  let playing = false, rafId = null;
+  const playBtn = $('playBtn'), playIcon = $('playIcon'), playLabel = $('playLabel'), elapsedHint = $('elapsedHint');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function stopPlay(){
+    if(!playing) return;
+    playing = false;
+    if(rafId) cancelAnimationFrame(rafId);
+    playIcon.textContent = '▶';
+    playLabel.textContent = '10日間を再生してみる';
+    elapsedHint.textContent = '';
+  }
+
+  playBtn.addEventListener('click', ()=>{
+    if(playing){ stopPlay(); return; }
+    playing = true;
+    playIcon.textContent = '■';
+    playLabel.textContent = '停止';
+    const max = +tElapsed.max;
+    const durationMs = reducedMotion ? 500 : 7000;
+    const startVal = 0;
+    const startTime = performance.now();
+    tElapsed.value = startVal;
+    function frame(now){
+      if(!playing) return;
+      const progress = clamp((now-startTime)/durationMs,0,1);
+      const val = startVal + progress*(max-startVal);
+      tElapsed.value = val;
+      elapsedHint.textContent = `再生中… ${formatDH(val)}経過`;
+      renderAll();
+      if(progress<1){ rafId = requestAnimationFrame(frame); }
+      else { stopPlay(); }
+    }
+    rafId = requestAnimationFrame(frame);
+  });
+
+  renderAll();
+})();
+</script>
