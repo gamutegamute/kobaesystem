@@ -6,6 +6,10 @@
 
 - `stage1_env_display/` … センサーと画面表示だけの最小構成（まずこれで動作確認）
 - `stage2_kobae_monitor/` … キャラ・4段階危険度・タッチ演出・音・振動を追加したフル版
+- `stage3_firebase_monitor/` … Stage 2にWi-Fi/Firebase送信を追加したスマホ連携版
+
+スマホ表示は `kitchen-hazard-monitor.html` をFirebase Hostingで公開して使用します。
+Firebaseの準備と書き込み方法は `FIREBASE_SETUP.md` を参照してください。
 
 ## 必要なもの
 
@@ -78,9 +82,10 @@ M5Stack公式サンプル・公式ソースコードを直接確認した上で�
 初回はArduino IDEでのコンパイル・実機書き込みでの動作確認をお願いします。
 もしコンパイルエラーが出た場合は、エラーメッセージを共有してもらえればすぐに修正します。
 
-## 次の拡張候補（今回は未実装）
+## 次の拡張候補
 
-- Wi-Fi/BLEでスマホアプリ側（ポジティブ変換アプリ等）にセンサー値・危険度・「片付けた」イベントを送信
+- `stage3_firebase_monitor/` とWebアプリを使ったFirebaseリアルタイム連携（実装済み、Firebaseプロジェクト設定が必要）
+- Web Push / Firebase Cloud Messagingによる危険度通知
 - QMP6988の気圧データの活用
 - 電源断をまたいだ経過時間の永続化（Preferences/NVS）
 - 日本語フォント対応

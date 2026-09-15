@@ -1,0 +1,18 @@
+{
+  "name": "台所ハザードモニター",
+  "short_name": "台所モニター",
+  "description": "M5Stack Core2の温湿度をリアルタイム表示する台所衛生モニター",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EEF2EF",
+  "theme_color": "#1F6F64",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
+

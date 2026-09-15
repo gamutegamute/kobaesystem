@@ -1,0 +1,16 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "devices": {
+      "$deviceId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "latest": {
+          ".validate": "newData.hasChildren(['temperature', 'humidity', 'riskPoints', 'dangerLevel', 'hoursSinceClean', 'updatedAt']) && newData.child('temperature').isNumber() && newData.child('temperature').val() >= -20 && newData.child('temperature').val() <= 80 && newData.child('humidity').isNumber() && newData.child('humidity').val() >= 0 && newData.child('humidity').val() <= 100 && newData.child('dangerLevel').isNumber() && newData.child('dangerLevel').val() >= 0 && newData.child('dangerLevel').val() <= 3"
+        }
+      }
+    }
+  }
+}
+

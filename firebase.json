@@ -1,0 +1,36 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      ".git/**",
+      ".firebase/**",
+      "**/.git/**",
+      "**/.*",
+      "**/*.ino",
+      "**/*.h",
+      "**/*.md"
+    ],
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/kitchen-hazard-monitor.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/service-worker.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  },
+  "database": {
+    "rules": "database.rules.json"
+  }
+}

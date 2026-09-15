@@ -14,11 +14,12 @@
 
 - https://www.arduino.cc/en/software から、自分のOS（Windows/Mac）用の最新版（IDE 2.x系）をダウンロードしてインストール
 
-### 0-2. USBドライバ（CP210x）のインストール
+### 0-2. USBドライバのインストール
 
-Core2はUSBシリアル変換に **CP2104** というチップを使っています。PCがCore2を「COMポート」として認識するために、Silicon Labs公式のドライバを入れておきます。
+Core2は製造時期によってUSBシリアル変換チップが異なります。初期モデルは **CP2104**、Core2 v1.3などの新しいモデルは主に **CH9102系** です。PCがCore2を「COMポート」として認識しない場合、本体のバージョンに合うドライバーを入れます。
 
-- ダウンロード: https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers （Windows/Macそれぞれ用がある）
+- M5Stack公式ダウンロード（CH9102を含む）: https://docs.m5stack.com/en/download
+- Silicon Labs CP210x: https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers
 - インストール後は一度PCを再起動しておくと安全です
 - ※すでに他のM5StackやESP32ボードを使ったことがあり、認識実績があるなら不要な場合もあります
 
@@ -107,7 +108,7 @@ Core2はUSBシリアル変換に **CP2104** というチップを使っていま
 
 **Q. Tools > Port に何も出てこない / COMポートが見当たらない**
 - USBケーブルがデータ通信対応か確認（充電専用ケーブルは認識されません）
-- CP210xドライバが入っているか確認（0-2）。入れてもダメならPCを再起動
+- 本体に合うCH9102系またはCP210xドライバが入っているか確認（0-2）。入れてもダメならPCを再起動
 - 別のUSBポート（PC本体直挿し。ハブ経由は避ける）に挿し直す
 
 **Q. 書き込み時に "Failed to connect to ESP32" のようなエラーが出る**

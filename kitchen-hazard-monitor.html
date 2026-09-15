@@ -1,3 +1,12 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F64">
+<meta name="description" content="M5Stack Core2の温湿度と台所の菌・コバエ発生リスクをスマホで確認できます。">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./app-icon.svg" type="image/svg+xml">
 <title>台所ハザードモニター｜菌・コバエ発生リスク可視化</title>
 <style>
   /* ---------- tokens ---------- */
@@ -49,6 +58,7 @@
   }
 
   *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
   body{
     margin:0; background:var(--bg); color:var(--ink);
     font-family:var(--font-body);
@@ -267,7 +277,52 @@
     max-width:74ch;
   }
   footer.fineprint{ margin-top:1.2rem; font-size:.74rem; color:var(--ink-faint); line-height:1.7; }
+
+  /* ---------- Core2 live data ---------- */
+  .live-panel{
+    background:linear-gradient(135deg,var(--surface),var(--surface-2));
+    border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.25rem;
+    margin-bottom:1.5rem; box-shadow:var(--shadow);
+  }
+  .live-head{ display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .live-title{ display:flex; align-items:center; gap:.65rem; }
+  .live-title h2{ margin:0; font-size:1rem; }
+  .live-status{ color:var(--ink-soft); font-size:.78rem; }
+  .live-dot{ width:10px; height:10px; border-radius:50%; background:var(--ink-faint); box-shadow:0 0 0 4px var(--surface-3); }
+  .live-dot[data-status="online"]{ background:var(--good); }
+  .live-dot[data-status="connecting"]{ background:var(--caution); }
+  .live-dot[data-status="stale"],.live-dot[data-status="setup"]{ background:var(--warning); }
+  .live-dot[data-status="error"]{ background:var(--danger); }
+  .live-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.7rem; margin-top:1rem; }
+  .live-metric{ background:var(--surface); border:1px solid var(--line-soft); border-radius:10px; padding:.7rem .8rem; }
+  .live-metric span{ display:block; color:var(--ink-faint); font-size:.68rem; margin-bottom:.3rem; }
+  .live-metric strong{ font-family:var(--font-mono); font-size:1.08rem; }
+  .live-controls,.live-login{ display:flex; align-items:end; gap:.55rem; flex-wrap:wrap; margin-top:.9rem; }
+  .live-control{ display:flex; flex-direction:column; gap:.25rem; flex:1 1 160px; }
+  .live-control label{ color:var(--ink-faint); font-size:.68rem; }
+  .live-control input{
+    width:100%; background:var(--surface); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:.55rem .65rem; font:inherit; font-size:.85rem;
+  }
+  .live-button{
+    border:0; border-radius:8px; padding:.58rem .85rem; cursor:pointer;
+    background:var(--accent); color:var(--surface); font:inherit; font-size:.8rem; font-weight:700;
+  }
+  .live-button.secondary{ background:var(--surface-3); color:var(--ink-soft); border:1px solid var(--line); }
+  .live-check{ display:flex; align-items:center; gap:.4rem; color:var(--ink-soft); font-size:.78rem; padding:.55rem 0; }
+  .live-meta{ display:flex; justify-content:space-between; gap:.8rem; flex-wrap:wrap; margin-top:.65rem; color:var(--ink-faint); font-size:.7rem; }
+  .live-setup{ margin:.8rem 0 0; padding:.65rem .75rem; background:var(--warning-soft); color:var(--warning); border-radius:8px; font-size:.78rem; line-height:1.6; }
+  @media(max-width:640px){
+    .page{ padding:1.4rem .9rem 3rem; }
+    header.hero{ margin-bottom:1.25rem; }
+    .live-grid{ grid-template-columns:1fr 1fr; }
+    .live-metric strong{ font-size:1rem; }
+    .banner .breakdown{ margin-left:0; width:100%; }
+    .banner .chip{ flex:1; min-width:88px; }
+  }
 </style>
+</head>
+<body>
 
 <div class="page">
 
@@ -276,6 +331,50 @@
     <h1>その洗い物、あと何時間で危険域？</h1>
     <p>放置時間・室温・湿度・汚れの種類から、菌の増殖とコバエの発生リスクを推定して可視化します。数値を動かして、洗い物を後回しにするとどうなるかを確かめてください。</p>
   </header>
+
+  <section class="live-panel" aria-label="Core2実機データ">
+    <div class="live-head">
+      <div class="live-title">
+        <span class="live-dot" id="liveDot" data-status="setup" aria-hidden="true"></span>
+        <h2>Core2 実機ライブ</h2>
+      </div>
+      <span class="live-status" id="liveStatus" aria-live="polite">Firebaseを確認中…</span>
+    </div>
+
+    <div class="live-grid">
+      <div class="live-metric"><span>温度</span><strong id="liveTemp">--.- ℃</strong></div>
+      <div class="live-metric"><span>湿度</span><strong id="liveHumidity">--.- %</strong></div>
+      <div class="live-metric"><span>端末判定</span><strong id="liveRisk">UNKNOWN</strong></div>
+      <div class="live-metric"><span>片付けから</span><strong id="liveElapsed">--.- 時間</strong></div>
+    </div>
+
+    <form class="live-login" id="liveLoginForm">
+      <div class="live-control">
+        <label for="liveEmail">Firebaseメールアドレス</label>
+        <input id="liveEmail" name="email" type="email" autocomplete="username" required>
+      </div>
+      <div class="live-control">
+        <label for="livePassword">パスワード</label>
+        <input id="livePassword" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="live-button" id="liveLogin" type="submit">ログイン</button>
+    </form>
+
+    <div class="live-controls" id="liveDeviceControls" hidden>
+      <div class="live-control">
+        <label for="liveDeviceId">端末ID</label>
+        <input id="liveDeviceId" value="core2-01" inputmode="text">
+      </div>
+      <button class="live-button" id="liveWatchDevice" type="button">この端末を見る</button>
+      <label class="live-check"><input id="liveAutoApply" type="checkbox" checked> 実機値をシミュレーターにも反映</label>
+      <button class="live-button secondary" id="liveLogout" type="button" hidden>ログアウト</button>
+    </div>
+
+    <p class="live-setup" id="liveSetupHint" hidden>
+      Firebase未設定です。<code>firebase-config.js</code>にFirebase Consoleのウェブアプリ設定を貼り付けると接続できます。
+    </p>
+    <div class="live-meta"><span id="liveUpdated">最終更新: --</span><span>更新間隔: 約10秒</span></div>
+  </section>
 
   <section class="banner" aria-label="総合コバエ発生リスク" aria-live="polite">
     <div class="banner-main">
@@ -1210,3 +1309,6 @@
   renderAll();
 })();
 </script>
+<script type="module" src="./firebase-live.js"></script>
+</body>
+</html>
