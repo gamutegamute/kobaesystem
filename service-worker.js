@@ -1,4 +1,4 @@
-const CACHE_NAME = "kitchen-hazard-v1";
+const CACHE_NAME = "kitchen-hazard-v2";
 const APP_SHELL = [
   "/",
   "/kitchen-hazard-monitor.html",
@@ -34,4 +34,3 @@ self.addEventListener("fetch", event => {
       .catch(() => caches.match(event.request).then(hit => hit || caches.match("/")))
   );
 });
-
