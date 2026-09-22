@@ -7,6 +7,7 @@
 ### 実績
 
 - **100program ファイナル進出**
+- [100program発表プレゼン（Canva・全13ページ）](https://www.canva.com/design/DAHVeHCFGWQ/5qZJ7vRFDMWdefj-WEMIdQ/edit)
 
 ### 背景と課題
 
@@ -42,6 +43,12 @@ M5Stack Core2、ENV III、Arduino/C++、M5Unified、M5GFX、Firebase Authenticat
 ### 一文で説明する場合
 
 > 温湿度と放置時間から台所の菌・コバエリスクを推定し、画面を覆うインクとワイプ操作で片付けを促すIoTプロトタイプを開発し、100programのファイナルへ進出しました。
+
+### 関連成果物
+
+- [発表プレゼン](https://www.canva.com/design/DAHVeHCFGWQ/5qZJ7vRFDMWdefj-WEMIdQ/edit)
+- [公開Web画面](https://kobaesystem.web.app)
+- [GitHubリポジトリ](https://github.com/gamutegamute/kobaesystem)
 
 ### 補足
 

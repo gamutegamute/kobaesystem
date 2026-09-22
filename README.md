@@ -8,6 +8,7 @@ M5Stack Core2と温湿度センサーを使い、台所の生ごみや洗い物�
 
 - **100program ファイナル進出**
 - M5Stack Core2、ENV III、Firebaseを組み合わせた実動プロトタイプを制作
+- [100program発表プレゼン（Canva・全13ページ）](https://www.canva.com/design/DAHVeHCFGWQ/5qZJ7vRFDMWdefj-WEMIdQ/edit)
 
 ## 主な体験
 
@@ -45,6 +46,14 @@ M5Stack Core2と温湿度センサーを使い、台所の生ごみや洗い物�
 | `SETUP_GUIDE.md` | Arduino IDEと実機の初期セットアップ |
 | `FIREBASE_SETUP.md` | Firebase連携の設定方法 |
 | `PROJECT_SUMMARY.md` | ポートフォリオ・実績紹介用の要約 |
+
+## 発表資料
+
+100programで使用したプレゼンは、次のCanvaリンクから確認できます。
+
+- [「ぬりかえす」発表プレゼン](https://www.canva.com/design/DAHVeHCFGWQ/5qZJ7vRFDMWdefj-WEMIdQ/edit)
+- 全13ページ
+- 一人暮らしの洗い場を対象に、課題、行動背景、提案、プロトタイプを説明
 
 ## 最終候補を動かすときの注意
 

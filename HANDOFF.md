@@ -12,6 +12,7 @@
 - インク体験の単体版: `nurikaesu_ink_3.ino`
 - スマホWeb画面: `kitchen-hazard-monitor.html`
 - 公開URL: https://kobaesystem.web.app
+- 発表プレゼン: https://www.canva.com/design/DAHVeHCFGWQ/5qZJ7vRFDMWdefj-WEMIdQ/edit
 - Firebase: Authentication、Realtime Database、Hostingを使用
 
 最終候補には、温湿度取得、4段階の危険度、キャラクター、インク演出、ワイプ操作、音、振動、バッテリー表示、Firebase送信が統合されています。
